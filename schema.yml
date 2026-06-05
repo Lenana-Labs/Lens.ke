@@ -1,0 +1,926 @@
+openapi: 3.0.3
+info:
+  title: Lens.ke API
+  version: 1.0.0
+  description: Public API documentation for Lens.ke.
+paths:
+  /api/v1/auth/login:
+    post:
+      operationId: v1_auth_login_create
+      summary: Login with email and password
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+          description: ''
+  /api/v1/auth/login/custom:
+    post:
+      operationId: v1_auth_login_custom_create
+      summary: Login with email and password
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+          description: ''
+  /api/v1/auth/logout:
+    post:
+      operationId: v1_auth_logout_create
+      summary: Logout and revoke a refresh token
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusMessage'
+          description: ''
+  /api/v1/auth/me:
+    get:
+      operationId: v1_auth_me_retrieve
+      summary: Get the current user
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        description: Bearer access token.
+        required: true
+      tags:
+      - Auth
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+          description: ''
+  /api/v1/auth/refresh:
+    post:
+      operationId: v1_auth_refresh_create
+      summary: Refresh an access token
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+          description: ''
+  /api/v1/auth/register:
+    post:
+      operationId: v1_auth_register_create
+      summary: Register a user
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+          description: ''
+  /api/v1/contributor/dashboard:
+    get:
+      operationId: v1_contributor_dashboard_retrieve
+      summary: Get contributor dashboard
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        description: Bearer access token.
+        required: true
+      tags:
+      - Contributor
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributorDashboardResponse'
+          description: ''
+  /api/v1/licenses/download-token/{photo_id}:
+    get:
+      operationId: v1_licenses_download_token_retrieve
+      summary: Create a secure download token
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        description: Bearer access token.
+        required: true
+      - in: path
+        name: photo_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Licensing
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadTokenResponse'
+          description: ''
+  /api/v1/photos:
+    get:
+      operationId: v1_photos_retrieve
+      summary: List active photos
+      parameters:
+      - in: query
+        name: county
+        schema:
+          type: string
+      - in: query
+        name: county_code
+        schema:
+          type: integer
+      - in: query
+        name: license_type
+        schema:
+          type: string
+          enum:
+          - Commercial_Paid
+          - Free_Attribution
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Page size, max 50.
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number.
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: sort
+        schema:
+          type: string
+          enum:
+          - newest
+          - popular
+      - in: query
+        name: tag
+        schema:
+          type: string
+        description: Comma-separated tags.
+      tags:
+      - Photos
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoListResponse'
+          description: ''
+  /api/v1/photos/{photo_id}:
+    get:
+      operationId: v1_photos_retrieve_2
+      summary: Get photo details
+      parameters:
+      - in: path
+        name: photo_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Photos
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDetailResponse'
+          description: ''
+  /api/v1/photos/{photo_id}/finalize:
+    post:
+      operationId: v1_photos_finalize_create
+      summary: Finalize a photo upload
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        description: Bearer access token.
+        required: true
+      - in: path
+        name: photo_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Photos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalizePhotoRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinalizePhotoRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinalizePhotoRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalizePhotoResponse'
+          description: ''
+  /api/v1/photos/upload-intent:
+    post:
+      operationId: v1_photos_upload_intent_create
+      summary: Create an upload intent
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        description: Bearer access token.
+        required: true
+      tags:
+      - Photos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadIntentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UploadIntentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadIntentRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadIntentResponse'
+          description: ''
+  /api/v1/users/profile:
+    get:
+      operationId: v1_users_profile_retrieve
+      summary: Get user profile
+      parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        description: Bearer access token.
+        required: true
+      tags:
+      - Users
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+          description: ''
+components:
+  schemas:
+    AuthUser:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          type: string
+      required:
+      - name
+      - role
+      - user_id
+    ContributorDashboard:
+      type: object
+      properties:
+        wallet:
+          $ref: '#/components/schemas/ContributorWallet'
+        statistics:
+          $ref: '#/components/schemas/ContributorStatistics'
+      required:
+      - statistics
+      - wallet
+    ContributorDashboardResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: '#/components/schemas/ContributorDashboard'
+      required:
+      - data
+      - status
+    ContributorStatistics:
+      type: object
+      properties:
+        total_uploads:
+          type: integer
+        active_images:
+          type: integer
+        processing_images:
+          type: integer
+        total_downloads:
+          type: integer
+      required:
+      - active_images
+      - processing_images
+      - total_downloads
+      - total_uploads
+    ContributorWallet:
+      type: object
+      properties:
+        available_balance_kes:
+          type: number
+          format: double
+        total_earned_kes:
+          type: number
+          format: double
+      required:
+      - available_balance_kes
+      - total_earned_kes
+    DownloadTokenData:
+      type: object
+      properties:
+        download_url:
+          type: string
+          format: uri
+        expires_in_seconds:
+          type: integer
+        license_pdf_url:
+          type: string
+          format: uri
+          nullable: true
+      required:
+      - download_url
+      - expires_in_seconds
+    DownloadTokenResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: '#/components/schemas/DownloadTokenData'
+      required:
+      - data
+      - status
+    FinalizePhotoRequest:
+      type: object
+      properties:
+        sheng_tags:
+          type: array
+          items:
+            type: string
+        formal_tags:
+          type: array
+          items:
+            type: string
+        county_code:
+          type: integer
+        license_type:
+          $ref: '#/components/schemas/LicenseTypeEnum'
+        price_kes:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        description:
+          type: string
+      required:
+      - county_code
+      - formal_tags
+      - license_type
+      - price_kes
+      - sheng_tags
+    FinalizePhotoResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        photo_id:
+          type: string
+          format: uuid
+        current_state:
+          type: string
+      required:
+      - current_state
+      - message
+      - photo_id
+      - status
+    LicenseTypeEnum:
+      enum:
+      - Free_Attribution
+      - Commercial_Paid
+      type: string
+      description: |-
+        * `Free_Attribution` - Free_Attribution
+        * `Commercial_Paid` - Commercial_Paid
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        token:
+          type: string
+        expires_in:
+          type: integer
+        user:
+          $ref: '#/components/schemas/AuthUser'
+      required:
+      - expires_in
+      - status
+      - token
+      - user
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        total_pages:
+          type: integer
+        total_items:
+          type: integer
+      required:
+      - current_page
+      - total_items
+      - total_pages
+    PhotoContributor:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+      - name
+      - user_id
+    PhotoDetail:
+      type: object
+      properties:
+        photo_id:
+          type: string
+          format: uuid
+        contributor:
+          $ref: '#/components/schemas/PhotoContributor'
+        title:
+          type: string
+        description:
+          type: string
+        watermarked_preview_url:
+          type: string
+          format: uri
+          nullable: true
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+        county:
+          type: string
+        sheng_tags:
+          type: array
+          items:
+            type: string
+        formal_tags:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        county_code:
+          type: integer
+          nullable: true
+        license_type:
+          type: string
+        price_kes:
+          type: number
+          format: double
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - contributor
+      - county
+      - county_code
+      - created_at
+      - description
+      - formal_tags
+      - license_type
+      - photo_id
+      - price_kes
+      - sheng_tags
+      - tags
+      - title
+    PhotoDetailResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/PhotoDetail'
+        status:
+          type: string
+      required:
+      - data
+      - status
+    PhotoListResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/PhotoSummary'
+        status:
+          type: string
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+      - data
+      - pagination
+      - status
+    PhotoSummary:
+      type: object
+      properties:
+        photo_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        watermarked_preview_url:
+          type: string
+          format: uri
+          nullable: true
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+        county:
+          type: string
+        sheng_tags:
+          type: array
+          items:
+            type: string
+        formal_tags:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        county_code:
+          type: integer
+          nullable: true
+        price_kes:
+          type: number
+          format: double
+        license_type:
+          type: string
+      required:
+      - county
+      - county_code
+      - formal_tags
+      - license_type
+      - photo_id
+      - price_kes
+      - sheng_tags
+      - tags
+      - title
+    ProfileResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/UserProfile'
+        status:
+          type: string
+      required:
+      - data
+      - status
+    RefreshRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+      required:
+      - refresh_token
+    RefreshResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: '#/components/schemas/RefreshTokenData'
+      required:
+      - data
+      - status
+    RefreshTokenData:
+      type: object
+      properties:
+        access_token:
+          type: string
+        access_token_expires_in:
+          type: integer
+        refresh_token:
+          type: string
+        refresh_token_expires_at:
+          type: string
+          format: date-time
+      required:
+      - access_token
+      - access_token_expires_in
+      - refresh_token
+      - refresh_token_expires_at
+    RefreshTokenRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+      required:
+      - email
+      - name
+      - password
+      - role
+    RegisterResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/RegisteredUser'
+      required:
+      - data
+      - message
+      - status
+    RegisteredUser:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+      required:
+      - email
+      - name
+      - role
+      - user_id
+    RoleEnum:
+      enum:
+      - buyer
+      - contributor
+      type: string
+      description: |-
+        * `buyer` - buyer
+        * `contributor` - contributor
+    StatusMessage:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+      required:
+      - status
+    UploadIntentData:
+      type: object
+      properties:
+        photo_id:
+          type: string
+          format: uuid
+        upload_url:
+          type: string
+          format: uri
+        fields:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+      - fields
+      - photo_id
+      - upload_url
+    UploadIntentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        filename:
+          type: string
+        file_type:
+          type: string
+        file_size:
+          type: integer
+      required:
+      - file_size
+      - file_type
+      - filename
+      - title
+    UploadIntentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: '#/components/schemas/UploadIntentData'
+      required:
+      - data
+      - status
+    UserProfile:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+        mpesa_phone:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - email
+      - name
+      - role
+      - user_id
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

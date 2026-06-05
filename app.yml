@@ -1,0 +1,42 @@
+name: lenske-backend
+region: fra
+services:
+  - name: lenske-api
+    github:
+      repo: njange/lens-ke-backend
+      branch: main
+      deploy_on_push: true
+    # Runs migrations and boots Gunicorn on app launch
+    run_command: python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT}
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-sm
+    envs:
+      - key: STORAGE_PROVIDER
+        value: digitalocean
+      - key: AWS_REGION
+        value: fra1
+      - key: AWS_S3_ENDPOINT_URL
+        value: https://fra1.digitaloceanspaces.com
+      - key: PRIVATE_RAW_BUCKET
+        value: lenske-private-raw
+      - key: PUBLIC_PREVIEWS_BUCKET
+        value: lenske-public-previews
+
+workers:
+  - name: maji-pipeline-worker
+    github:
+      repo: njange/lens-ke-backend
+      branch: main
+      deploy_on_push: true
+    # Starts your background Celery execution team
+    run_command: celery -A config worker --loglevel=info
+    instance_count: 1
+    instance_size_slug: basic-md # Higher memory tier for heavy Pillow operations
+    envs:
+      - key: STORAGE_PROVIDER
+        value: digitalocean
+      - key: AWS_REGION
+        value: fra1
+      - key: AWS_S3_ENDPOINT_URL
+        value: https://fra1.digitaloceanspaces.com
