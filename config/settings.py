@@ -30,8 +30,12 @@ SECRET_KEY = 'django-insecure-azf+l3!)pigebnnklf6f_2xhtq5c4o&uvu5keqd8+y!$_ldz^1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+allowed_hosts_env = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]")
 
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(",") if host.strip()]
+
+# Or if you want to explicitly allow any dynamic DigitalOcean subdomain for now:
+# ALLOWED_HOSTS = ['.ondigitalocean.app', 'localhost', '127.0.0.1']
 
 # Application definition
 
