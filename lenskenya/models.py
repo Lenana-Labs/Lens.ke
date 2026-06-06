@@ -58,14 +58,14 @@ class User(AbstractBaseUser, PermissionsMixin, TimestampedModel):
     
 	# Keep this temporarily so Django can read the old data
     name = models.CharField(max_length=255, blank=True, default='')
-	
+
     # ─── REFRACTORED NAME FIELDS ──────────────────────────────────────
     first_name = models.CharField(max_length=150, blank=True, default='')
     last_name = models.CharField(max_length=150, blank=True, default='')
     
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128, db_column='password')
-    role = models.CharField(max_length=20, choices=Role.choices, default=Role.BUYER)
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.CONTRIBUTOR)
     
     # Kept your exact db_column mapping and Safaricom / Airtel / Telkom validator
     mpesa_phone = models.CharField(
@@ -119,67 +119,79 @@ class User(AbstractBaseUser, PermissionsMixin, TimestampedModel):
 
 
 class Photo(TimestampedModel):
-	class LicenseType(models.TextChoices):
-		FREE_ATTRIBUTION = 'Free_Attribution', 'Free Attribution'
-		COMMERCIAL_PAID = 'Commercial_Paid', 'Commercial Paid'
+    class LicenseType(models.TextChoices):
+        FREE_ATTRIBUTION = 'Free_Attribution', 'Free Attribution'
+        COMMERCIAL_PAID = 'Commercial_Paid', 'Commercial Paid'
 
-	photo_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-	contributor = models.ForeignKey(User, on_delete=models.PROTECT, related_name='photos', db_column='user_id')
-	title = models.CharField(max_length=255)
-	description = models.TextField(blank=True)
-	county = models.CharField(max_length=100, blank=True, default='')
-	county_code = models.PositiveSmallIntegerField(blank=True, null=True)
-	license_type = models.CharField(max_length=30, choices=LicenseType.choices, default=LicenseType.FREE_ATTRIBUTION)
-	price_kes = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-	watermarked_preview_url = models.URLField(max_length=1000, blank=True, null=True, db_column='watermarked_preview')
-	secure_raw_s3_key = models.CharField(max_length=1024, db_column='raw_secure_file')
-	tags = ArrayField(models.CharField(max_length=100), default=list, blank=True)
-	sheng_tags = ArrayField(models.CharField(max_length=100), default=list, blank=True)
-	formal_tags = ArrayField(models.CharField(max_length=100), default=list, blank=True)
-	views = models.PositiveIntegerField(default=0)
-	downloads = models.PositiveIntegerField(default=0, db_column='clicks')
-	likes = models.PositiveIntegerField(default=0)
-	class Status(models.TextChoices):
-		ACTIVE = 'active', 'Active'
-		PENDING = 'pending', 'Pending'
-		PROCESSING = 'processing', 'Processing'
+    class Status(models.TextChoices):
+        ACTIVE = 'active', 'Active'
+        PENDING = 'pending', 'Pending'
+        PROCESSING = 'processing', 'Processing'
 
-	status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
-	is_active = models.BooleanField(default=True)
+    photo_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    contributor = models.ForeignKey(User, on_delete=models.PROTECT, related_name='photos', db_column='user_id')
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    
+    # 🚀 Added Fields to support complete frontend payload metadata
+    camera = models.CharField(max_length=255, blank=True, default='')
+    category = models.CharField(max_length=100, blank=True, default='')
+    
+    county = models.CharField(max_length=100, blank=True, default='')
+    county_code = models.PositiveSmallIntegerField(blank=True, null=True)
+    license_type = models.CharField(max_length=30, choices=LicenseType.choices, default=LicenseType.FREE_ATTRIBUTION)
+    price_kes = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    watermarked_preview_url = models.URLField(max_length=1000, blank=True, null=True, db_column='watermarked_preview')
+    secure_raw_s3_key = models.CharField(max_length=1024, db_column='raw_secure_file')
+    
+    tags = ArrayField(models.CharField(max_length=100), default=list, blank=True)
+    sheng_tags = ArrayField(models.CharField(max_length=100), default=list, blank=True)
+    formal_tags = ArrayField(models.CharField(max_length=100), default=list, blank=True)
+    
+    views = models.PositiveIntegerField(default=0)
+    downloads = models.PositiveIntegerField(default=0, db_column='clicks')
+    likes = models.PositiveIntegerField(default=0)
+    
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    is_active = models.BooleanField(default=True)
 
-	class Meta:
-		db_table = 'photos'
-		indexes = [
-			models.Index(fields=['contributor'], name='photos_contributor_idx'),
-			models.Index(fields=['county'], name='photos_county_idx'),
-			models.Index(fields=['county_code'], name='photos_county_code_idx'),
-			models.Index(fields=['license_type'], name='photos_license_type_idx'),
-			models.Index(fields=['created_at'], name='photos_created_at_idx'),
-			models.Index(fields=['status', 'created_at'], name='photos_status_created_idx'),
-			models.Index(fields=['status', 'county'], name='photos_status_county_idx'),
-			models.Index(models.F('views') + models.F('downloads') + models.F('likes'), name='photos_popularity_idx'),
-			GinIndex(fields=['tags'], name='photos_tags_gin'),
-			GinIndex(fields=['sheng_tags'], name='photos_sheng_tags_gin'),
-			GinIndex(fields=['formal_tags'], name='photos_formal_tags_gin'),
-		]
+    class Meta:
+        db_table = 'photos'
+        indexes = [
+            models.Index(fields=['contributor'], name='photos_contributor_idx'),
+            models.Index(fields=['county'], name='photos_county_idx'),
+            models.Index(fields=['county_code'], name='photos_county_code_idx'),
+            models.Index(fields=['license_type'], name='photos_license_type_idx'),
+            models.Index(fields=['created_at'], name='photos_created_at_idx'),
+            models.Index(fields=['status', 'created_at'], name='photos_status_created_idx'),
+            models.Index(fields=['status', 'county'], name='photos_status_county_idx'),
+            # Performance Optimization for Popular Sort annotation metrics
+            models.Index(models.F('views') + models.F('downloads') + models.F('likes'), name='photos_popularity_idx'),
+            GinIndex(fields=['tags'], name='photos_tags_gin'),
+            GinIndex(fields=['sheng_tags'], name='photos_sheng_tags_gin'),
+            GinIndex(fields=['formal_tags'], name='photos_formal_tags_gin'),
+            # 🚀 Added Indexes for searching via your new frontend attributes
+            models.Index(fields=['category'], name='photos_category_idx'),
+        ]
 
-	def __str__(self):
-		return self.title
+    def __str__(self):
+        return self.title
 
-	@property
-	def id(self):
-		return self.photo_id
+    @property
+    def id(self):
+        return self.photo_id
 
-	@property
-	def image_url(self):
-		return self.watermarked_preview_url
+    @property
+    def image_url(self):
+        return self.watermarked_preview_url
 
-	def save(self, *args, **kwargs):
-		if not self.tags:
-			merged_tags = list(dict.fromkeys((self.sheng_tags or []) + (self.formal_tags or [])))
-			self.tags = merged_tags
-		super().save(*args, **kwargs)
-
+    def save(self, *args, **kwargs):
+        # Fallback to prevent overwriting existing explicit tag structures passed down
+        if not self.tags:
+            merged_tags = list(dict.fromkeys((self.sheng_tags or []) + (self.formal_tags or [])))
+            self.tags = merged_tags
+        super().save(*args, **kwargs)
 
 class Transaction(TimestampedModel):
 	class Status(models.TextChoices):
