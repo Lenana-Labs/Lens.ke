@@ -12,91 +12,110 @@ from django.db.models import F, Q
 
 
 class TimestampedModel(models.Model):
-	created_at = models.DateTimeField(auto_now_add=True)
-	updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-	class Meta:
-		abstract = True
+    class Meta:
+        abstract = True
 
 
 class UserManager(BaseUserManager):
-	def create_user(self, email, password=None, **extra_fields):
-		if not email:
-			raise ValueError('The email field must be set.')
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The email field must be set.')
 
-		email = self.normalize_email(email)
-		user = self.model(email=email, **extra_fields)
-		if password:
-			user.set_password(password)
-		else:
-			user.set_unusable_password()
-		user.save(using=self._db)
-		return user
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+        user.save(using=self._db)
+        return user
 
-	def create_superuser(self, email, password=None, **extra_fields):
-		extra_fields.setdefault('role', 'admin')
-		extra_fields.setdefault('is_superuser', True)
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('role', 'admin')
+        extra_fields.setdefault('is_superuser', True)
 
-		if extra_fields.get('role') != User.Role.ADMIN:
-			raise ValueError('Superuser must have role=admin.')
+        # Adjusted to check against the refactored class definition
+        if extra_fields.get('role') != User.Role.ADMIN:
+            raise ValueError('Superuser must have role=admin.')
 
-		return self.create_user(email=email, password=password, **extra_fields)
+        # Ensure required fields are handled if passed down
+        extra_fields.setdefault('first_name', 'Admin')
+        extra_fields.setdefault('last_name', 'System')
+
+        return self.create_user(email=email, password=password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin, TimestampedModel):
-	class Role(models.TextChoices):
-		BUYER = 'buyer', 'Buyer'
-		CONTRIBUTOR = 'contributor', 'Contributor'
-		ADMIN = 'admin', 'Admin'
+    class Role(models.TextChoices):
+        BUYER = 'buyer', 'Buyer'
+        CONTRIBUTOR = 'contributor', 'Contributor'
+        ADMIN = 'admin', 'Admin'
 
-	id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-	name = models.CharField(max_length=255, blank=True, default='')
-	email = models.EmailField(unique=True)
-	password = models.CharField(max_length=128, db_column='password')
-	role = models.CharField(max_length=20, choices=Role.choices, default=Role.BUYER)
-	mpesa_phone = models.CharField(
-		max_length=13,
-		blank=True,
-		null=True,
-		db_column='phone_number',
-		validators=[RegexValidator(regex=r'^(\+254|0)[17][0-9]{8}$')],
-	)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+	# Keep this temporarily so Django can read the old data
+    name = models.CharField(max_length=255, blank=True, default='')
+	
+    # ─── REFRACTORED NAME FIELDS ──────────────────────────────────────
+    first_name = models.CharField(max_length=150, blank=True, default='')
+    last_name = models.CharField(max_length=150, blank=True, default='')
+    
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=128, db_column='password')
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.BUYER)
+    
+    # Kept your exact db_column mapping and Safaricom / Airtel / Telkom validator
+    mpesa_phone = models.CharField(
+        max_length=13,
+        blank=True,
+        null=True,
+        db_column='phone_number',
+        validators=[RegexValidator(regex=r'^(\+254|0)[17][0-9]{8}$')],
+    )
 
-	objects = UserManager()
+    objects = UserManager()
 
-	USERNAME_FIELD = 'email'
-	REQUIRED_FIELDS = []
+    USERNAME_FIELD = 'email'
+    # Adding these here ensures tools like standard django createsuperuser CLI prompt for them
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
-	class Meta:
-		db_table = 'users'
-		indexes = [
-			models.Index(fields=['email'], name='users_email_idx'),
-			models.Index(fields=['role'], name='users_role_idx'),
-		]
+    class Meta:
+        db_table = 'users'
+        indexes = [
+            models.Index(fields=['email'], name='users_email_idx'),
+            models.Index(fields=['role'], name='users_role_idx'),
+        ]
 
-	@property
-	def user_id(self):
-		return self.id
+    @property
+    def user_id(self):
+        return self.id
 
-	@property
-	def is_staff(self):
-		return self.role == self.Role.ADMIN
+    # Dynamic property to maintain backward compatibility if any service checks .name
+    @property
+    def name(self):
+        return f"{self.first_name} {self.last_name}".strip()
 
-	@property
-	def is_active(self):
-		return True
+    @property
+    def is_staff(self):
+        return self.role == self.Role.ADMIN
 
-	def __str__(self):
-		return self.email
+    @property
+    def is_active(self):
+        return True
 
-	def save(self, *args, **kwargs):
-		if self.pk is not None:
-			original_role = type(self).objects.filter(pk=self.pk).values_list('role', flat=True).first()
-			if original_role is not None and self.role != original_role:
-				from django.core.exceptions import ValidationError
+    def __str__(self):
+        return self.email
 
-				raise ValidationError({'role': 'Role is immutable after account creation.'})
-		super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            original_role = type(self).objects.filter(pk=self.pk).values_list('role', flat=True).first()
+            if original_role is not None and self.role != original_role:
+                from django.core.exceptions import ValidationError
+                raise ValidationError({'role': 'Role is immutable after account creation.'})
+        super().save(*args, **kwargs)
 
 
 class Photo(TimestampedModel):
