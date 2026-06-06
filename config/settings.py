@@ -64,7 +64,7 @@ AUTH_USER_MODEL = 'lenskenya.User'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # MUST be at the very top!
-    'django.middleware.security.SecurityMiddleware'
+    'django.middleware.security.SecurityMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
