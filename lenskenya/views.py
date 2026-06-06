@@ -150,7 +150,8 @@ def _auth_user_payload(user: User):
 def _profile_payload(user: User):
 	return {
 		'user_id': str(user.pk),
-		'name': user.name,
+		'first_name': user.first_name,
+		'last_name': user.last_name,
 		'email': user.email,
 		'role': user.role,
 		'mpesa_phone': user.mpesa_phone,
@@ -179,7 +180,8 @@ def _photo_detail_item(photo: Photo):
 		'photo_id': str(photo.photo_id),
 		'contributor': {
 			'user_id': str(photo.contributor_id),
-			'name': photo.contributor.name or photo.contributor.email,
+			'first_name': photo.contributor.first_name,
+			'last_name': photo.contributor.last_name,
 		},
 		'title': photo.title,
 		'description': photo.description,
@@ -268,7 +270,8 @@ def _serialize_photo_detail(photo: Photo) -> dict:
 		'created_at': photo.created_at.isoformat(),
 		'uploader': {
 			'id': str(photo.contributor_id),
-			'name': getattr(photo.contributor, 'email', str(photo.contributor_id)),
+			'first_name': getattr(photo.contributor, 'first_name', ''),
+			'last_name': getattr(photo.contributor, 'last_name', ''),
 		},
 	}
 
@@ -428,39 +431,53 @@ def me_view(request):
 )
 @api_view(['POST'])
 def auth_register_view(request):
-	try:
-		payload = _json_body(request)
-		name = (payload.get('name') or '').strip()
-		email = (payload.get('email') or '').strip().lower()
-		password = payload.get('password') or ''
-		role = _normalized_role(payload.get('role'))
+    try:
+        payload = _json_body(request)
+        # 1. Extract the new split name fields from the payload
+        first_name = (payload.get('first_name') or '').strip()
+        last_name = (payload.get('last_name') or '').strip()
+        email = (payload.get('email') or '').strip().lower()
+        password = payload.get('password') or ''
+        role = _normalized_role(payload.get('role'))
 
-		if not name:
-			raise ValidationError('name is required.')
-		if not email:
-			raise ValidationError('email is required.')
-		if not password:
-			raise ValidationError('password is required.')
-		if role is None:
-			raise ValidationError('role must be buyer or contributor.')
-		if User.objects.filter(email=email).exists():
-			raise ValidationError('A user with this email already exists.')
+        # 2. Update validation assertions to require both values
+        if not first_name:
+            raise ValidationError('first_name is required.')
+        if not last_name:
+            raise ValidationError('last_name is required.')
+        if not email:
+            raise ValidationError('email is required.')
+        if not password:
+            raise ValidationError('password is required.')
+        if role is None:
+            raise ValidationError('role must be buyer or contributor.')
+        if User.objects.filter(email=email).exists():
+            raise ValidationError('A user with this email already exists.')
 
-		user = User.objects.create_user(email=email, password=password, name=name, role=role)
-		return JsonResponse({
-			'status': 'success',
-			'message': 'User registered successfully',
-			'data': {
-				'user_id': str(user.pk),
-				'name': user.name,
-				'email': user.email,
-				'role': user.role,
-			},
-		}, status=201)
-	except ValidationError as exc:
-		return _validation_error_response(exc)
-	except (json.JSONDecodeError, TypeError, ValueError):
-		return JsonResponse({'detail': 'Invalid JSON body.'}, status=400)
+        # 3. Create the user using the split schema values
+        user = User.objects.create_user(
+            email=email, 
+            password=password, 
+            first_name=first_name, 
+            last_name=last_name, 
+            role=role
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'User registered successfully',
+            'data': {
+                'user_id': str(user.pk),
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'role': user.role,
+            },
+        }, status=201)
+    except ValidationError as exc:
+        return _validation_error_response(exc)
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return JsonResponse({'detail': 'Invalid JSON body.'}, status=400)
 
 
 @csrf_exempt

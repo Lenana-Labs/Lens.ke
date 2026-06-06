@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 backups/
 staticfiles/
+test_spaces_pipeline.py
