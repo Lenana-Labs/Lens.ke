@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         # Keep whatever previous migration number was automatically generated here
-        ('lenskenya', '0005_alter_photo_contributor_alter_photo_county_and_more.py'), 
+        ('lenskenya', '0005_alter_photo_contributor_alter_photo_county_and_more'), 
     ]
 
     operations = [
