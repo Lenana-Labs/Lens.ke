@@ -20,7 +20,7 @@ gunicorn==26.0.0
 inflection==0.5.1
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
-jwt==1.4.0
+PyJWT==2.10.1
 kombu==5.6.2
 packaging==26.2
 prompt_toolkit==3.0.52
