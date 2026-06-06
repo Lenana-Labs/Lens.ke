@@ -30,6 +30,14 @@ SECRET_KEY = 'django-insecure-azf+l3!)pigebnnklf6f_2xhtq5c4o&uvu5keqd8+y!$_ldz^1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+# 3. If your frontend sends credentials like cookies or Authorization headers, add this
+CORS_ALLOW_CREDENTIALS = True
+
 allowed_hosts_env = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]")
 
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(",") if host.strip()]
@@ -55,6 +63,8 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'lenskenya.User'
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # MUST be at the very top!
+    'django.middleware.security.SecurityMiddleware'
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
