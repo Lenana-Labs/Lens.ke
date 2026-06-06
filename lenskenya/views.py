@@ -150,7 +150,8 @@ def _auth_user_payload(user: User):
 def _profile_payload(user: User):
 	return {
 		'user_id': str(user.pk),
-		'name': user.name,
+		'first_name': user.first_name,
+		'last_name': user.last_name,
 		'email': user.email,
 		'role': user.role,
 		'mpesa_phone': user.mpesa_phone,
@@ -179,7 +180,8 @@ def _photo_detail_item(photo: Photo):
 		'photo_id': str(photo.photo_id),
 		'contributor': {
 			'user_id': str(photo.contributor_id),
-			'name': photo.contributor.name or photo.contributor.email,
+			'first_name': photo.contributor.first_name,
+			'last_name': photo.contributor.last_name,
 		},
 		'title': photo.title,
 		'description': photo.description,
@@ -268,7 +270,8 @@ def _serialize_photo_detail(photo: Photo) -> dict:
 		'created_at': photo.created_at.isoformat(),
 		'uploader': {
 			'id': str(photo.contributor_id),
-			'name': getattr(photo.contributor, 'email', str(photo.contributor_id)),
+			'first_name': getattr(photo.contributor, 'first_name', ''),
+			'last_name': getattr(photo.contributor, 'last_name', ''),
 		},
 	}
 
