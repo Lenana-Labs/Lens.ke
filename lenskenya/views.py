@@ -142,7 +142,8 @@ def _normalized_role(value):
 def _auth_user_payload(user: User):
 	return {
 		'user_id': str(user.pk),
-		'name': user.name,
+		'first_name': user.first_name,
+		'last_name': user.last_name,
 		'role': user.role,
 	}
 
