@@ -6,6 +6,8 @@ The backend is deployed on DigitalOcean App Platform with a web service and a Ce
 
 ## System Design
 
+https://excalidraw.com/#room=d6bd34a5c32394ccda62,m2WHVeUTYRaovbv91ACChQ
+
 ### Functional Requirements
 
 - Contributors can upload high-resolution photos and track upload/earnings activity.
